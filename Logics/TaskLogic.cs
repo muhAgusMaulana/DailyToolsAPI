@@ -4,27 +4,30 @@ using DailyToolsAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace DailyToolsAPI.Logics
 {
     public class TaskLogic
     {
-        public static ResponseModel CreateTask(TaskDataLayer model)
+        public static void CreateTask(TaskDataLayer model)
         {
-            var response = new ResponseModel();
-
-            try
+            using (var context = new DailyToolsContext())
             {
-                using (var context = new DailyToolsContext())
+                var transaction = context.Database.BeginTransaction();
+
+                try
                 {
+                    Guid taskId = Guid.NewGuid();
+
                     var task = new Task()
                     {
-                        TaskId = Guid.NewGuid(),
+                        TaskId = taskId,
                         UserName = model.UserName,
                         TaskName = model.TaskName,
                         TaskDateFrom = DateTime.Parse(model.TaskDateFromStr),
                         TaskDateTo = DateTime.Parse(model.TaskDateToStr),
-                        TaskPrioriyCode = model.TaskPrioriyCode,
+                        TaskPriorityCode = model.TaskPriorityCode,
                         IsReminder = model.IsReminder,
                         IsActive = model.IsActive,
                         InputTime = DateTime.Now,
@@ -33,40 +36,27 @@ namespace DailyToolsAPI.Logics
                         ModifUn = model.UserName
                     };
 
+                    var taskLog = new TaskLog()
+                    {
+                        TaskId = taskId,
+                        TaskTransTypeCode = nameof(TaskTransTypeCodeEnum.INIT),
+                        TaskLogMessage = string.Empty,
+                        InputTime = DateTime.Now,
+                        InputUn = model.UserName
+                    };
+
                     context.Tasks.Add(task);
+                    context.TaskLogs.Add(taskLog);
                     context.SaveChanges();
+
+                    transaction.Commit();
                 }
-            }
-            catch (Exception ex)
-            {
-                response.ResponseCode = ResponseCode.ERROR;
-                response.ResponseMessage = ex.Message;
-            }
-
-            return response;
-        }
-
-        public static ResponseModel DeleteTaskById(Guid taskId)
-        {
-            var response = new ResponseModel();
-
-            try
-            {
-                var taskById = GetTaskById(taskId);
-
-                if (taskById != null)
+                catch (Exception ex)
                 {
-                    var task = new DailyToolsContext().Tasks.Remove(taskById);
-                    task.Context.SaveChanges();
+                    transaction.Rollback();
+                    throw new Exception(ex.Message, ex);
                 }
             }
-            catch (Exception ex)
-            {
-                response.ResponseCode = ResponseCode.ERROR;
-                response.ResponseMessage = ex.Message;
-            }
-
-            return response;
         }
 
         public static IEnumerable<Task> GetAllTask()
@@ -81,40 +71,112 @@ namespace DailyToolsAPI.Logics
             return task;
         }
 
-        public static ResponseModel UpdateTask(TaskDataLayer model)
+        public static void UpdateTask(TaskDataLayer model)
         {
-            var response = new ResponseModel();
-
-            try
+            using (var context = new DailyToolsContext())
             {
-                using(var context = new DailyToolsContext())
+                var transaction = context.Database.BeginTransaction();
+
+                try
                 {
-                    var taskById = GetTaskById(model.TaskId);
-                    if (taskById == null)
+                    var task = GetTaskById(model.TaskId);
+
+                    if (task == null)
                     {
                         throw new Exception("Task for update not found");
                     }
 
-                    taskById.TaskName = model.TaskName;
-                    taskById.TaskDateFrom = DateTime.Parse(model.TaskDateFromStr);
-                    taskById.TaskDateTo = DateTime.Parse(model.TaskDateToStr);
-                    taskById.TaskPrioriyCode = model.TaskPrioriyCode;
-                    taskById.IsReminder = model.IsReminder;
-                    taskById.IsActive = model.IsActive;
-                    taskById.ModifTime = DateTime.Now;
-                    taskById.ModifUn = model.UserName;
+                    var taskLogMessage = new List<TaskLogMessage>();
+                    if (task.TaskName != model.TaskName)
+                    {
+                        taskLogMessage.Add(new TaskLogMessage
+                        {
+                            Field = nameof(task.TaskName),
+                            Before = task.TaskName,
+                            After = model.TaskName
+                        });
+                    }
+                    
+                    if (task.TaskDateFrom != DateTime.Parse(model.TaskDateFromStr))
+                    {
+                        taskLogMessage.Add(new TaskLogMessage
+                        {
+                            Field = nameof(task.TaskDateFrom),
+                            Before = task.TaskDateFrom,
+                            After = DateTime.Parse(model.TaskDateFromStr)
+                        });
+                    }
+                    
+                    if (task.TaskDateTo != DateTime.Parse(model.TaskDateToStr))
+                    {
+                        taskLogMessage.Add(new TaskLogMessage
+                        {
+                            Field = nameof(task.TaskDateTo),
+                            Before = task.TaskDateTo,
+                            After = DateTime.Parse(model.TaskDateToStr)
+                        });
+                    }
 
-                    context.Update<Task>(taskById);
+                    if (task.TaskPriorityCode != model.TaskPriorityCode)
+                    {
+                        taskLogMessage.Add(new TaskLogMessage
+                        {
+                            Field = nameof(task.TaskPriorityCode),
+                            Before = task.TaskPriorityCode,
+                            After = model.TaskPriorityCode
+                        });
+                    }
+                    
+                    if (task.IsReminder != model.IsReminder)
+                    {
+                        taskLogMessage.Add(new TaskLogMessage
+                        {
+                            Field = nameof(task.IsReminder),
+                            Before = task.IsReminder,
+                            After = model.IsReminder
+                        });
+                    }
+                    
+                    if (task.IsActive != model.IsActive)
+                    {
+                        taskLogMessage.Add(new TaskLogMessage
+                        {
+                            Field = nameof(task.IsActive),
+                            Before = task.IsActive,
+                            After = model.IsActive
+                        });
+                    }
+
+                    var taskLog = new TaskLog()
+                    {
+                        TaskId = task.TaskId,
+                        TaskTransTypeCode = model.IsActive ? nameof(TaskTransTypeCodeEnum.UPDT) : nameof(TaskTransTypeCodeEnum.DELT),
+                        TaskLogMessage = taskLogMessage.Count > 0 && model.IsActive ? JsonConvert.SerializeObject(taskLogMessage) : string.Empty,
+                        InputTime = DateTime.Now,
+                        InputUn = "agus.maulana"
+                    };
+
+                    task.TaskName = model.TaskName;
+                    task.TaskDateFrom = DateTime.Parse(model.TaskDateFromStr);
+                    task.TaskDateTo = DateTime.Parse(model.TaskDateToStr);
+                    task.TaskPriorityCode = model.TaskPriorityCode;
+                    task.IsReminder = model.IsReminder;
+                    task.IsActive = model.IsActive;
+                    task.ModifTime = DateTime.Now;
+                    task.ModifUn = model.UserName;
+
+                    context.Tasks.Update(task);
+                    context.TaskLogs.Add(taskLog);
                     context.SaveChanges();
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception(ex.Message, ex);
                 }
             }
-            catch (Exception ex)
-            {
-                response.ResponseCode = ResponseCode.ERROR;
-                response.ResponseMessage = ex.Message;
-            }
-
-            return response;
         }
     }
 }

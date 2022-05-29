@@ -1,6 +1,7 @@
 ﻿using DailyToolsAPI.DataLayer;
 using DailyToolsAPI.DataLayer.ResponseDataLayer;
 using DailyToolsAPI.Logics;
+using DailyToolsAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -18,14 +19,31 @@ namespace DailyToolsAPI.Controllers
             _exception = null;
         }
 
-        [HttpGet("GetUserAccount")]
-        public ResponseModel GetUserAccount()
+        #region UserAccount Endpoint
+        [HttpGet("GetUserAccountList")]
+        public ResponseModel GetUserAccountList()
         {
             var response = new ResponseModel();
 
             try
             {
+                var userAccounts = UserAccountLogic.GetUserAccounts();
+                var users = UserLogic.GetUsers();
+                var accountType = AccountTypeLogic.GetAccountTypes();
+                var result = (from account in userAccounts
+                              join type in accountType on account.AccountTypeCode equals type.AccountTypeCode
+                              join user in users on account.UserName equals user.UserName
+                              select new UserAccountDataLayer()
+                              {
+                                  UserAccountId = account.UserAccountId,
+                                  AccountTypeName = type.AccountTypeName,
+                                  AmountBalance = account.AmountBalance,
+                                  IsActive = account.IsActive,
+                                  FullName = user.FullName,
+                                  UserName = account.UserName
+                              }).ToList();
 
+                response.Data = result;
             }
             catch (Exception ex)
             {
@@ -43,13 +61,30 @@ namespace DailyToolsAPI.Controllers
         }
 
         [HttpGet("GetUserAccountByUserName")]
-        public ResponseModel GetUserAccountByUserName()
+        public ResponseModel GetUserAccountByUserName(string userName)
         {
             var response = new ResponseModel();
 
             try
             {
+                var userAccounts = UserAccountLogic.GetUserAccounts();
+                var users = UserLogic.GetUsers();
+                var accountType = AccountTypeLogic.GetAccountTypes();
+                var result = (from account in userAccounts
+                              join type in accountType on account.AccountTypeCode equals type.AccountTypeCode
+                              join user in users on account.UserName equals user.UserName
+                              where account.UserName.ToLower() == userName.ToLower()
+                              select new UserAccountDataLayer()
+                              {
+                                  UserAccountId = account.UserAccountId,
+                                  AccountTypeName = type.AccountTypeName,
+                                  AmountBalance = account.AmountBalance,
+                                  IsActive = account.IsActive,
+                                  FullName = user.FullName,
+                                  UserName = account.UserName
+                              }).ToList();
 
+                response.Data = result;
             }
             catch (Exception ex)
             {
@@ -66,8 +101,8 @@ namespace DailyToolsAPI.Controllers
             return response;
         }
 
-        [HttpGet("ViewMutation")]
-        public ResponseModel ViewMutation()
+        [HttpPost("ViewMutation")]
+        public ResponseModel ViewMutation([FromBody]UserAccountLogDataLayer model)
         {
             var response = new ResponseModel();
 
@@ -91,13 +126,16 @@ namespace DailyToolsAPI.Controllers
         }
 
         [HttpPost("CreateAccount")]
-        public ResponseModel CreateAccount()
+        public ResponseModel CreateAccount([FromBody]NewUserAccountDataLayer model)
         {
             var response = new ResponseModel();
 
             try
             {
-
+                if (model != null)
+                {
+                    UserAccountLogic.CreateUserAccount(model);
+                }
             }
             catch (Exception ex)
             {
@@ -114,38 +152,14 @@ namespace DailyToolsAPI.Controllers
             return response;
         }
 
-        [HttpPost("DebitAccount")]
-        public ResponseModel DebitAccount()
+        [HttpPost("UserAccountTransaction")]
+        public ResponseModel UserAccountTransaction([FromBody]UserAccountTransactionDataLayer model)
         {
             var response = new ResponseModel();
 
             try
             {
-
-            }
-            catch (Exception ex)
-            {
-                _exception = ex;
-                response.ResponseCode = ResponseCode.ERROR;
-                response.ResponseMessage = ex.Message;
-            }
-            finally
-            {
-                string controllerName = ControllerContext.RouteData.Values["action"].ToString();
-                APILogLogic.CreateLog(controllerName, _exception, response);
-            }
-
-            return response;
-        }
-
-        [HttpPost("CreaditAccount")]
-        public ResponseModel CreaditAccount()
-        {
-            var response = new ResponseModel();
-
-            try
-            {
-
+                var userAccount = UserAccountLogLogic.CreateUserAccountLog(model);
             }
             catch (Exception ex)
             {
@@ -163,13 +177,16 @@ namespace DailyToolsAPI.Controllers
         }
 
         [HttpPost("DeleteAccount")]
-        public ResponseModel DeleteAccount()
+        public ResponseModel DeleteAccount([FromBody]UserAccount model)
         {
             var response = new ResponseModel();
 
             try
             {
-
+                if (model != null)
+                {
+                    UserAccountLogic.DeleteUserAccount(model);
+                }
             }
             catch (Exception ex)
             {
@@ -185,7 +202,9 @@ namespace DailyToolsAPI.Controllers
 
             return response;
         }
+        #endregion
 
+        #region AccountType Endpoint
         [HttpGet("GetAllAccountType")]
         public ResponseModel GetAllAccountType()
         {
@@ -193,11 +212,11 @@ namespace DailyToolsAPI.Controllers
 
             try
             {
-                var accountTypes = AccountTypeLogic.GetAllAccountType()
+                var accountTypes = AccountTypeLogic.GetAccountTypes()
                     .Select(item => new AccountTypeDataLayer 
                     { 
                         AccountTypeCode = item.AccountTypeCode,
-                        AccountName = item.AccountName,
+                        AccountTypeName = item.AccountTypeName,
                     });
 
                 response.Data = accountTypes;
@@ -231,7 +250,7 @@ namespace DailyToolsAPI.Controllers
                     var accountTypeDataLayer = new AccountTypeDataLayer()
                     {
                         AccountTypeCode = accountType.AccountTypeCode,
-                        AccountName = accountType.AccountName
+                        AccountTypeName = accountType.AccountTypeName
                     };
 
                     response.Data = accountTypeDataLayer;
@@ -323,5 +342,6 @@ namespace DailyToolsAPI.Controllers
 
             return response;
         }
+        #endregion
     }
 }

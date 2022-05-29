@@ -8,11 +8,11 @@ namespace DailyToolsAPI.Models
     public partial class UserAccountLog
     {
         public Guid UserAccountLogId { get; set; }
+        public Guid UserAccountId { get; set; }
         public string OperationType { get; set; }
-        public string SourceType { get; set; }
-        public string TargetType { get; set; }
-        public decimal AmountBalance { get; set; }
-        public Guid? TargetAccountId { get; set; }
+        public decimal Amount { get; set; }
+        public Guid? TargetUserAccountId { get; set; }
+        public string Remarks { get; set; }
         public DateTime InputTime { get; set; }
         public string InputUn { get; set; }
         public DateTime ModifTime { get; set; }

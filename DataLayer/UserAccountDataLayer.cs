@@ -6,8 +6,8 @@ namespace DailyToolsAPI.DataLayer
     {
         public Guid UserAccountId { get; set; }
         public string UserName { get; set; }
-        public string Name { get; set; }
-        public string AccountName { get; set; }
+        public string FullName { get; set; }
+        public string AccountTypeName { get; set; }
         public decimal AmountBalance { get; set; }
         public bool IsActive { get; set; }
     }
@@ -18,12 +18,28 @@ namespace DailyToolsAPI.DataLayer
         public string DateFromStr { get; set; }
         public string DateToStr { get; set; }
         public string OperationType { get; set; }
-        public string SourceType { get; set; }
     }
 
     public class NewUserAccountDataLayer
     {
         public string UserName { get; set; }
-        public string AccountType { get; set; }
+        public string AccountTypeCode { get; set; }
+    }
+
+    public class UserAccountTransactionDataLayer
+    {
+        public Guid UserAccountId { get; set; }
+        public string UserName { get; set; }
+        public string OperationType { get; set; }
+        public decimal Amount { get; set; }
+        public string Remarks { get; set; }
+        public Guid? TargetUserAccountId { get; set; }
+    }
+
+    public enum OperationTypeEnum
+    {
+        DEBT,
+        CRDT,
+        TRFR
     }
 }

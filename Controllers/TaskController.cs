@@ -46,7 +46,7 @@ namespace DailyToolsAPI.Controllers
                         TaskDateFromStr = task.TaskDateFrom.Value.ToString(datetimeFormat),
                         TaskDateToStr = task.TaskDateTo.Value.ToString(datetimeFormat),
                         TaskName = task.TaskName,
-                        TaskPrioriyCode = task.TaskPrioriyCode
+                        TaskPriorityCode = task.TaskPriorityCode
                     });
 
                 response.Data = task;
@@ -84,7 +84,7 @@ namespace DailyToolsAPI.Controllers
                         IsReminder = taskById.IsReminder,
                         TaskDateFromStr = taskById.TaskDateFrom.Value.ToString(),
                         TaskDateToStr = taskById.TaskDateTo.Value.ToString(),
-                        TaskPrioriyCode = taskById.TaskPrioriyCode,
+                        TaskPriorityCode = taskById.TaskPriorityCode,
                         UserName = taskById.UserName
                     };
 
@@ -112,7 +112,7 @@ namespace DailyToolsAPI.Controllers
 
             try
             {
-                response = TaskLogic.CreateTask(model);
+                TaskLogic.CreateTask(model);
             }
             catch (Exception ex)
             {
@@ -128,29 +128,6 @@ namespace DailyToolsAPI.Controllers
             return response;
         }
 
-        [HttpPost("DeleteTask")]
-        public ResponseModel DeleteTask([FromBody]Guid taskId)
-        {
-            var response = new ResponseModel();
-
-            try
-            {
-                response = TaskLogic.DeleteTaskById(taskId);
-            }
-            catch (Exception ex)
-            {
-                response.ResponseCode = ResponseCode.ERROR;
-                response.ResponseMessage = ex.Message;
-            }
-            finally
-            {
-                string controllerName = ControllerContext.RouteData.Values["action"].ToString();
-                APILogLogic.CreateLog(controllerName, _exception, response, taskId);
-            }
-
-            return response;
-        }
-
         [HttpPost("UpdateTask")]
         public ResponseModel UpdateTask([FromBody] TaskDataLayer model)
         {
@@ -158,7 +135,7 @@ namespace DailyToolsAPI.Controllers
 
             try
             {
-                response = TaskLogic.UpdateTask(model);
+                TaskLogic.UpdateTask(model);
             }
             catch (Exception ex)
             {

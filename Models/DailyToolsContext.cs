@@ -50,7 +50,7 @@ namespace DailyToolsAPI.Models
                     .HasMaxLength(4)
                     .IsUnicode(false);
 
-                entity.Property(e => e.AccountName)
+                entity.Property(e => e.AccountTypeName)
                     .IsRequired()
                     .HasMaxLength(50)
                     .IsUnicode(false);
@@ -83,8 +83,8 @@ namespace DailyToolsAPI.Models
                 entity.ToTable("APILog");
 
                 entity.Property(e => e.ApilogId)
-                    .ValueGeneratedNever()
-                    .HasColumnName("APILogID");
+                    .HasColumnName("APILogID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.Apiname)
                     .IsRequired()
@@ -141,8 +141,8 @@ namespace DailyToolsAPI.Models
                 entity.ToTable("Task");
 
                 entity.Property(e => e.TaskId)
-                    .ValueGeneratedNever()
-                    .HasColumnName("TaskID");
+                    .HasColumnName("TaskID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.InputTime).HasColumnType("datetime");
 
@@ -180,8 +180,8 @@ namespace DailyToolsAPI.Models
                 entity.ToTable("TaskLog");
 
                 entity.Property(e => e.TaskLogId)
-                    .ValueGeneratedNever()
-                    .HasColumnName("TaskLogID");
+                    .HasColumnName("TaskLogID")
+                    .HasDefaultValueSql("(newid())");
 
                 entity.Property(e => e.InputTime).HasColumnType("datetime");
 
@@ -191,17 +191,14 @@ namespace DailyToolsAPI.Models
                     .IsUnicode(false)
                     .HasColumnName("InputUN");
 
-                entity.Property(e => e.ModifTime).HasColumnType("datetime");
-
-                entity.Property(e => e.ModifUn)
-                    .IsRequired()
-                    .HasMaxLength(50)
-                    .IsUnicode(false)
-                    .HasColumnName("ModifUN");
-
                 entity.Property(e => e.TaskId).HasColumnName("TaskID");
 
                 entity.Property(e => e.TaskLogMessage).IsUnicode(false);
+
+                entity.Property(e => e.TaskTransTypeCode)
+                    .IsRequired()
+                    .HasMaxLength(4)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<User>(entity =>
@@ -266,14 +263,16 @@ namespace DailyToolsAPI.Models
 
             modelBuilder.Entity<UserAccount>(entity =>
             {
+                entity.HasKey(e => new { e.UserName, e.AccountTypeCode })
+                    .HasName("PK_UserAccount_1");
+
                 entity.ToTable("UserAccount");
 
-                entity.Property(e => e.UserAccountId)
-                    .ValueGeneratedNever()
-                    .HasColumnName("UserAccountID");
+                entity.Property(e => e.UserName)
+                    .HasMaxLength(50)
+                    .IsUnicode(false);
 
                 entity.Property(e => e.AccountTypeCode)
-                    .IsRequired()
                     .HasMaxLength(4)
                     .IsUnicode(false);
 
@@ -295,10 +294,9 @@ namespace DailyToolsAPI.Models
                     .IsUnicode(false)
                     .HasColumnName("ModifUN");
 
-                entity.Property(e => e.UserName)
-                    .IsRequired()
-                    .HasMaxLength(50)
-                    .IsUnicode(false);
+                entity.Property(e => e.UserAccountId)
+                    .HasColumnName("UserAccountID")
+                    .HasDefaultValueSql("(newid())");
             });
 
             modelBuilder.Entity<UserAccountLog>(entity =>
@@ -306,12 +304,14 @@ namespace DailyToolsAPI.Models
                 entity.ToTable("UserAccountLog");
 
                 entity.Property(e => e.UserAccountLogId)
-                    .ValueGeneratedNever()
-                    .HasColumnName("UserAccountLogID");
+                    .HasColumnName("UserAccountLogID")
+                    .HasDefaultValueSql("(newid())");
 
-                entity.Property(e => e.AmountBalance).HasColumnType("decimal(18, 0)");
+                entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
 
-                entity.Property(e => e.InputTime).HasColumnType("datetime");
+                entity.Property(e => e.InputTime)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
 
                 entity.Property(e => e.InputUn)
                     .IsRequired()
@@ -319,7 +319,9 @@ namespace DailyToolsAPI.Models
                     .IsUnicode(false)
                     .HasColumnName("InputUN");
 
-                entity.Property(e => e.ModifTime).HasColumnType("datetime");
+                entity.Property(e => e.ModifTime)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
 
                 entity.Property(e => e.ModifUn)
                     .IsRequired()
@@ -332,17 +334,13 @@ namespace DailyToolsAPI.Models
                     .HasMaxLength(4)
                     .IsUnicode(false);
 
-                entity.Property(e => e.SourceType)
-                    .IsRequired()
-                    .HasMaxLength(4)
+                entity.Property(e => e.Remarks)
+                    .HasMaxLength(500)
                     .IsUnicode(false);
 
-                entity.Property(e => e.TargetAccountId).HasColumnName("TargetAccountID");
+                entity.Property(e => e.TargetUserAccountId).HasColumnName("TargetUserAccountID");
 
-                entity.Property(e => e.TargetType)
-                    .IsRequired()
-                    .HasMaxLength(4)
-                    .IsUnicode(false);
+                entity.Property(e => e.UserAccountId).HasColumnName("UserAccountID");
             });
 
             OnModelCreatingPartial(modelBuilder);

@@ -9,7 +9,7 @@ namespace DailyToolsAPI.Logics
 {
     public class AccountTypeLogic
     {
-        public static IEnumerable<AccountType> GetAllAccountType()
+        public static IEnumerable<AccountType> GetAccountTypes()
         {
             var accountTypes = new DailyToolsContext().AccountTypes.AsEnumerable();
             return accountTypes;
@@ -31,7 +31,7 @@ namespace DailyToolsAPI.Logics
                     var accountType = new AccountType()
                     {
                         AccountTypeCode = model.AccountTypeCode,
-                        AccountName = model.AccountName,
+                        AccountTypeName = model.AccountTypeName,
                         InputTime = DateTime.Now,
                         InputUn = "agus.maulana",
                         ModifTime = DateTime.Now,
@@ -60,7 +60,7 @@ namespace DailyToolsAPI.Logics
                 using (var context = new DailyToolsContext())
                 {
                     var accountType = GetAccountType(model.AccountTypeCode);
-                    accountType.AccountName = model.AccountName;
+                    accountType.AccountTypeName = model.AccountTypeName;
                     accountType.ModifTime = DateTime.Now;
                     accountType.ModifUn = "agus.maulana";
 

@@ -12,7 +12,7 @@ namespace DailyToolsAPI.Models
         public string TaskName { get; set; }
         public DateTime? TaskDateFrom { get; set; }
         public DateTime? TaskDateTo { get; set; }
-        public short? TaskPrioriyCode { get; set; }
+        public short? TaskPriorityCode { get; set; }
         public bool IsReminder { get; set; }
         public bool IsActive { get; set; }
         public DateTime InputTime { get; set; }
