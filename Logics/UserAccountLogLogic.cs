@@ -17,9 +17,11 @@ namespace DailyToolsAPI.Logics
             {
                 using (var context = new DailyToolsContext())
                 {
-                    var userAccount = context.UserAccounts.Where(item => item.UserName == model.UserName).FirstOrDefault();
+                    var userAccount = context.UserAccounts.Where(item => item.UserAccountId == model.UserAccountId).FirstOrDefault();
 
                     decimal remainingBalance = userAccount.AmountBalance;
+
+                    Guid targetUserAccountId = Guid.Empty;
 
                     switch (model.OperationType)
                     {
@@ -30,6 +32,12 @@ namespace DailyToolsAPI.Logics
                             remainingBalance -= model.Amount;
                             break;
                         case nameof(OperationTypeEnum.TRFR):
+                            targetUserAccountId = model.TargetUserAccountId.Value;
+                            remainingBalance -= model.Amount;
+
+                            var userAccountTarget = context.UserAccounts.Where(item => item.UserAccountId == targetUserAccountId).FirstOrDefault();
+                            userAccountTarget.AmountBalance = userAccountTarget.AmountBalance + model.Amount;
+                            context.UserAccounts.Update(userAccountTarget);
                             break;
                         default:
                             throw new Exception($"{model.OperationType} does not registered in OperationTypeEnum");
@@ -46,6 +54,7 @@ namespace DailyToolsAPI.Logics
                         OperationType = model.OperationType,
                         Remarks = model.Remarks,
                         UserAccountId = userAccount.UserAccountId,
+                        TargetUserAccountId = targetUserAccountId != Guid.Empty ? targetUserAccountId : null,
                         InputUn = "agus.maulana",
                         ModifUn = "agus.maulana"
                     };
@@ -54,7 +63,7 @@ namespace DailyToolsAPI.Logics
                     context.SaveChanges();
                     transaction.Commit();
 
-                    userAccount = context.UserAccounts.Where(item => item.UserName == model.UserName).FirstOrDefault();
+                    userAccount = context.UserAccounts.Where(item => item.UserAccountId == model.UserAccountId).FirstOrDefault();
                     userAccountData.UserName = userAccount.UserName;
                     userAccountData.UserAccountId = userAccount.UserAccountId;
                     userAccountData.AmountBalance = userAccount.AmountBalance;
@@ -66,7 +75,7 @@ namespace DailyToolsAPI.Logics
             catch (Exception ex)
             {
                 transaction.Rollback();
-                throw new Exception(ex.Message);
+                throw new Exception(ex.Message, ex);
             }
 
             return userAccountData;

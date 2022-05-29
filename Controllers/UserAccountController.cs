@@ -119,7 +119,7 @@ namespace DailyToolsAPI.Controllers
             finally
             {
                 string controllerName = ControllerContext.RouteData.Values["action"].ToString();
-                APILogLogic.CreateLog(controllerName, _exception, response);
+                APILogLogic.CreateLog(controllerName, _exception, response, model);
             }
 
             return response;
@@ -146,7 +146,7 @@ namespace DailyToolsAPI.Controllers
             finally
             {
                 string controllerName = ControllerContext.RouteData.Values["action"].ToString();
-                APILogLogic.CreateLog(controllerName, _exception, response);
+                APILogLogic.CreateLog(controllerName, _exception, response, model);
             }
 
             return response;
@@ -170,34 +170,7 @@ namespace DailyToolsAPI.Controllers
             finally
             {
                 string controllerName = ControllerContext.RouteData.Values["action"].ToString();
-                APILogLogic.CreateLog(controllerName, _exception, response);
-            }
-
-            return response;
-        }
-
-        [HttpPost("DeleteAccount")]
-        public ResponseModel DeleteAccount([FromBody]UserAccount model)
-        {
-            var response = new ResponseModel();
-
-            try
-            {
-                if (model != null)
-                {
-                    UserAccountLogic.DeleteUserAccount(model);
-                }
-            }
-            catch (Exception ex)
-            {
-                _exception = ex;
-                response.ResponseCode = ResponseCode.ERROR;
-                response.ResponseMessage = ex.Message;
-            }
-            finally
-            {
-                string controllerName = ControllerContext.RouteData.Values["action"].ToString();
-                APILogLogic.CreateLog(controllerName, _exception, response);
+                APILogLogic.CreateLog(controllerName, _exception, response, model);
             }
 
             return response;

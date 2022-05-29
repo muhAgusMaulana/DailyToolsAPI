@@ -79,7 +79,7 @@ namespace DailyToolsAPI.Logics
 
                 try
                 {
-                    var task = GetTaskById(model.TaskId);
+                    var task = GetTaskById(model.TaskId.Value);
 
                     if (task == null)
                     {
